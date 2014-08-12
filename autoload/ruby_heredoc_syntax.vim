@@ -50,7 +50,19 @@ function! ruby_heredoc_syntax#include_other_syntax(filetype)
     unlet b:current_syntax
   endif
 
-  execute 'syntax include @'.group.' syntax/'.a:filetype.'.vim'
+  try
+    execute 'syntax include @'.group.' syntax/'.a:filetype.'.vim'
+  catch /E484:/
+    " E484: Can't (open|read) file
+    "   This would happen when a syntax file for 'a:filetype' is not contained
+    "   within 'runtimepath' (i.e. lazy loading).
+    " FIXME:
+    "   The highligh for 'a:filetype' in heredoc would be blank. It is exepected
+    "   to highlight them as a normal heredoc.
+    echohl ErrorMsg
+    echom 'Failed to include a syntax file of "' . a:filetype . '" for heredoc (ruby-heredoc-syntax)'
+    echohl None
+  endtry
 
   " syntax restore
   if exists('s:current_syntax')
