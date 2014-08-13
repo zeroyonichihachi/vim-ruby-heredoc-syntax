@@ -47,29 +47,31 @@ function! ruby_heredoc_syntax#include_other_syntax(filetype)
   " syntax save
   if exists('b:current_syntax')
     let s:current_syntax = b:current_syntax
-    unlet b:current_syntax
   endif
+  let b:current_syntax = a:filetype
 
   try
     execute 'syntax include @'.group.' syntax/'.a:filetype.'.vim'
+
   catch /E484:/
     " E484: Can't (open|read) file
     "   This would happen when a syntax file for 'a:filetype' is not contained
-    "   within 'runtimepath' (i.e. lazy loading).
+    "   within 'runtimepath' (i.e. lazy loading, or just not installed).
     " FIXME:
     "   The highligh for 'a:filetype' in heredoc would be blank. It is exepected
     "   to highlight them as a normal heredoc.
     echohl ErrorMsg
     echom 'Failed to include a syntax file of "' . a:filetype . '" for heredoc (ruby-heredoc-syntax)'
     echohl None
-  endtry
 
-  " syntax restore
-  if exists('s:current_syntax')
-    let b:current_syntax=s:current_syntax
-  else
-    unlet b:current_syntax
-  endif
+  finally
+    " syntax restore
+    if exists('s:current_syntax')
+      let b:current_syntax = s:current_syntax
+    else
+      unlet b:current_syntax
+    endif
+  endtry
 
   return group
 endfunction
